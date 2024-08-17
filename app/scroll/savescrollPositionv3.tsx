@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { create, StoreApi } from "zustand";
+import debounce from "lodash.debounce";
 
 export interface ScrollStore {
   scrollPosition: number;
@@ -26,7 +27,7 @@ export default function useSaveScrollPositionV3(
   scrollContainerRef: React.RefObject<HTMLDivElement>
 ) {
   const useStore = getStore(pageName); // Get the store for the specific page
-  console.log("useStore", useStore);
+  // console.log("useStore", useStore);
   const { scrollPosition, setScrollPosition } = useStore();
 
   useEffect(() => {
@@ -37,11 +38,11 @@ export default function useSaveScrollPositionV3(
       scrollContainer.scrollTop = scrollPosition;
     }
 
-    const handleScroll = () => {
+    const handleScroll = debounce(() => {
       if (scrollContainer) {
         setScrollPosition(scrollContainer.scrollTop);
       }
-    };
+    }, 25);
 
     if (scrollContainer) {
       scrollContainer.addEventListener("scroll", handleScroll);

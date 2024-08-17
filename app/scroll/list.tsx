@@ -1,37 +1,50 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
-import useSaveSCrollPosition from "./useSaveSCrollPosition";
-import { useScrollStore } from "./pageScroll";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import useSaveScrollPositionV3 from "./savescrollPositionv3";
 import axios from "axios";
-import { Indie_Flower } from "next/dist/compiled/@next/font/dist/google";
 import InifintScroll from "./inifintScroll";
-
+import { useListStore } from "./store";
+interface Item {
+  id: number;
+  title: string;
+}
 export default function List() {
   const router = useRouter();
-  const itemsArray = Array.from(
-    { length: 50 },
-    (_, index) => `item${index + 1}`
-  );
+  ///Inoo tarif kardaim baraye akharin item toy obsever e toye infinitscroll
+  const lastItemRef = useRef<HTMLDivElement>(null);
+
+  ///Inoo tarif kardaim baraye div parent e map item ha
+  //baraye ma mishe cardwrapper ke position scroll ro save kone
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  const { page, mydata, setPage, addMydata } = useListStore();
 
   const fetchdata = async () => {
-    const res = await axios.get(
-      "https://66c061c4ba6f27ca9a567408.mockapi.io/todos?page=1&limit=10"
-    );
-    return res.data;
+    try {
+      const res = await axios.get<Item[]>(
+        `https://66c061c4ba6f27ca9a567408.mockapi.io/todos?page=${page}&limit=10`
+      );
+      addMydata(res.data);
+      setPage(page + 1);
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // console.log("mydata-->", mydata);
   useSaveScrollPositionV3("adsPage", scrollContainerRef);
   return (
     <div className='h-full w-full flex'>
-      <InifintScroll>
+      <InifintScroll fn={fetchdata} data={mydata} lastItemRef={lastItemRef}>
         <div
           ref={scrollContainerRef}
           className='w-[50%] h-[50%] bg-emerald-300 overflow-y-auto  p-4'>
-          {itemsArray.map((item) => (
-            <div className='w-full flex justify-center p-4 ' key={item}>
-              <div className=''>{item}</div>
+          {mydata.map((item, index) => (
+            <div
+              ref={index === mydata.length - 1 ? lastItemRef : null}
+              className='w-full flex justify-center p-4 '
+              key={item.id}>
+              <div className=''>{item.title}</div>
             </div>
           ))}
         </div>
